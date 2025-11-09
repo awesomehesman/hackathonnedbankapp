@@ -1,0 +1,187 @@
+<header class="hero-nav">
+  <img src="/assets/credlink-logo.png" class="hero-nav__logo" alt="CredLink" />
+  <div class="header-branch ml-auto">
+    <label for="branch-select" class="branch-select__label">Select branch</label>
+    <div class="branch-select__control">
+      <select
+        id="branch-select"
+        class="branch-select__select"
+        [value]="branch$ | async"
+        (change)="setBranch($any($event.target).value)"
+      >
+        <option *ngFor="let b of branchList" [value]="b">{{ b }}</option>
+      </select>
+      <span class="branch-select__icon" aria-hidden="true">⌄</span>
+    </div>
+  </div>
+  <a class="brand-button brand-button--hero ml-4" routerLink="/compare">Compare branches</a>
+  <!-- <nav class="hidden md:flex gap-6 text-white">
+    <span>Dashboard</span>
+    <span>Borrow Money</span>
+    <span>Lend Money</span>
+  </nav>
+  <div class="flex items-center gap-4">
+    <div class="text-white text-sm">
+      <div class="opacity-80">Available balance</div>
+      <div class="text-lg font-semibold">R25,000.00</div>
+    </div>
+    <button class="brand-button brand-button--outline bg-white/10 text-white border-white/40" (click)="logout()">Sign out</button>
+  </div> -->
+</header>
+
+<section class="page-shell">
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <article class="dash-card" *ngFor="let metric of metrics(); trackBy: trackByIndex">
+      <p class="text-sm text-slate-500">{{ metric.label }}</p>
+      <h3 class="text-2xl font-semibold text-[#03332C]">{{ metric.value }}</h3>
+      <p class="text-sm" [ngClass]="metric.trend === 'down' ? 'text-red-500' : 'text-emerald-600'">{{ metric.change }}</p>
+    </article>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <article class="dash-card col-span-2">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.35em] text-[#0c7c68]">Forecast</p>
+          <h2 class="text-2xl font-semibold text-[#03332C]">Projected balances</h2>
+        </div>
+        <span class="text-sm text-slate-500">Confidence band (95%)</span>
+      </div>
+      <div class="forecast-chart">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="bandGradient" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#A7F3D0" />
+              <stop offset="100%" stop-color="#D1FAE5" />
+            </linearGradient>
+          </defs>
+          <path [attr.d]="bandPath()" fill="url(#bandGradient)" opacity="0.6"></path>
+          <path [attr.d]="chartPath()" fill="none" stroke="#0fb389" stroke-width="2.5"></path>
+        </svg>
+      </div>
+      <div class="grid md:grid-cols-3 gap-3 mt-6 text-sm text-slate-600">
+        <div *ngFor="let point of forecast(); trackBy: trackByIndex">
+          <div class="font-semibold text-[#03332C]">{{ point.date | date: 'MMM d' }}</div>
+          <div>R {{ point.projected | number }}</div>
+          <div class="text-xs text-slate-400">Band: {{ point.low | number }} – {{ point.high | number }}</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="dash-card space-y-4">
+      <h3 class="text-xl font-semibold text-[#03332C]">AI Insight Cards</h3>
+      <div *ngFor="let insight of insights(); trackBy: trackByIndex" class="rounded-2xl border border-slate-100 p-4 bg-[#f5fbf9]">
+        <div class="flex items-center justify-between">
+          <p class="font-medium text-[#03332C]">{{ insight.title }}</p>
+          <span class="px-3 py-1 rounded-full text-xs font-semibold" [ngClass]="{
+              'bg-emerald-100 text-emerald-700': insight.impact === 'Positive',
+              'bg-amber-100 text-amber-700': insight.impact === 'Neutral',
+              'bg-rose-100 text-rose-700': insight.impact === 'Risk'
+            }">
+            {{ insight.impact }}
+          </span>
+        </div>
+        <p class="text-sm text-slate-600 mt-1">{{ insight.detail }}</p>
+        <p class="text-xs text-slate-400 mt-2">Confidence: {{ insight.confidence }}</p>
+      </div>
+    </article>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <article class="dash-card space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-semibold text-[#03332C]">Next-best-actions</h3>
+        <span class="px-3 py-1 rounded-full bg-[#e3f6f0] text-[#0c7c68] text-xs font-semibold">{{ actions().length }} ready</span>
+      </div>
+      <div *ngFor="let action of actions(); trackBy: trackByIndex" class="rounded-2xl border border-slate-100 p-4 flex flex-col gap-1">
+        <p class="font-medium text-[#03332C]">{{ action.title }}</p>
+        <p class="text-sm text-slate-600">{{ action.description }}</p>
+        <span class="text-xs font-semibold px-3 py-1 rounded-full self-start" [ngClass]="{
+            'bg-rose-100 text-rose-700': action.priority === 'High',
+            'bg-amber-100 text-amber-700': action.priority === 'Medium',
+            'bg-emerald-100 text-emerald-700': action.priority === 'Low'
+          }">
+          {{ action.priority }} priority
+        </span>
+      </div>
+    </article>
+
+    <article class="dash-card space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-semibold text-[#03332C]">Warnings & alerts</h3>
+        <span class="text-xs font-semibold text-rose-600">Live</span>
+      </div>
+      <div *ngFor="let alert of alerts(); trackBy: trackByIndex" class="rounded-2xl p-4 flex gap-3"
+        [ngClass]="{
+          'bg-rose-50 border border-rose-100': alert.severity === 'critical',
+          'bg-amber-50 border border-amber-100': alert.severity === 'warning',
+          'bg-slate-50 border border-slate-100': alert.severity === 'info'
+        }">
+        <div class="text-2xl">{{ alert.severity === 'critical' ? '⚠️' : alert.severity === 'warning' ? '🔔' : 'ℹ️' }}</div>
+        <div>
+          <p class="text-sm text-[#03332C]">{{ alert.message }}</p>
+          <p class="text-xs text-slate-500" *ngIf="alert.date">Expected: {{ alert.date | date }}</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="dash-card space-y-4">
+      <h3 class="text-xl font-semibold text-[#03332C]">Explainability drivers</h3>
+      <div class="space-y-3">
+        <div *ngFor="let driver of drivers(); trackBy: trackByIndex">
+          <div class="flex justify-between text-sm text-slate-500">
+            <span>{{ driver.label }}</span>
+            <span>{{ driver.weight }}%</span>
+          </div>
+          <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full bg-gradient-to-r from-[#0fb389] to-[#0c7c68]" [style.width.%]="driver.weight"></div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <article class="dash-card space-y-4">
+    <div class="flex flex-wrap items-center gap-4">
+      <div>
+        <p class="text-xs uppercase tracking-[0.35em] text-[#0c7c68]">Simulation toolbar</p>
+        <h3 class="text-2xl font-semibold text-[#03332C]">What-if adjustments</h3>
+      </div>
+      <p class="text-sm text-slate-500 max-w-xl">
+        Tune inflows/outflows to stress test your runway before executing next-best-actions. All numbers update instantly using mock data.
+      </p>
+    </div>
+
+    <form class="grid md:grid-cols-3 gap-4" [formGroup]="simulationForm">
+      <label class="flex flex-col gap-2 text-sm text-slate-500">
+        Inflows Δ %
+        <input type="range" min="-10" max="20" formControlName="inflowDelta" />
+        <span class="text-[#0c7c68] font-semibold">{{ simulationForm.value.inflowDelta }}%</span>
+      </label>
+      <label class="flex flex-col gap-2 text-sm text-slate-500">
+        Outflows Δ %
+        <input type="range" min="-10" max="20" formControlName="outflowDelta" />
+        <span class="text-rose-600 font-semibold">{{ simulationForm.value.outflowDelta }}%</span>
+      </label>
+      <label class="flex flex-col gap-2 text-sm text-slate-500">
+        Horizon (days)
+        <input type="number" min="7" max="30" formControlName="horizon" class="rounded-2xl border border-slate-200 px-4 py-2" />
+      </label>
+    </form>
+
+    <div class="grid md:grid-cols-3 gap-4 text-sm">
+      <div class="rounded-2xl bg-[#f5fbf9] p-4">
+        <p class="text-slate-500">Simulation headline</p>
+        <p class="text-lg font-semibold text-[#03332C]">{{ simulation().headline }}</p>
+      </div>
+      <div class="rounded-2xl bg-[#f5fbf9] p-4">
+        <p class="text-slate-500">Projected balance</p>
+        <p class="text-lg font-semibold text-[#03332C]">R {{ simulation().projection | number }}</p>
+      </div>
+      <div class="rounded-2xl bg-[#f5fbf9] p-4">
+        <p class="text-slate-500">Horizon</p>
+        <p class="text-lg font-semibold text-[#03332C]">{{ simulationForm.value.horizon }} days</p>
+      </div>
+    </div>
+  </article>
+</section>

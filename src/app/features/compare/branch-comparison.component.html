@@ -1,0 +1,109 @@
+<header class="hero-nav">
+  <img src="/assets/credlink-logo.png" class="hero-nav__logo" alt="CredLink" />
+  <div class="header-branch ml-auto">
+    <label for="compare-branch-select" class="branch-select__label">Select branch</label>
+    <div class="branch-select__control">
+      <select
+        id="compare-branch-select"
+        class="branch-select__select"
+        [value]="branch$ | async"
+        (change)="setBranch($any($event.target).value)"
+      >
+        <option *ngFor="let b of branchList" [value]="b">{{ b }}</option>
+      </select>
+      <span class="branch-select__icon" aria-hidden="true">⌄</span>
+    </div>
+  </div>
+  <a routerLink="/dashboard" class="brand-button brand-button--hero ml-4">← Back to dashboard</a>
+</header>
+
+<section class="compare-shell">
+  <header class="compare-header">
+    <div>
+      <p class="eyebrow">Branch tools</p>
+      <h1>Compare branches</h1>
+      <p class="subtitle">Overlay forecasts and balances to see which site drives your cash position.</p>
+    </div>
+  </header>
+
+  <form class="compare-controls" [formGroup]="compareForm">
+    <label>
+      Select branch
+      <select formControlName="primary">
+        <option *ngFor="let branch of branchOptions" [value]="branch">{{ branch }}</option>
+      </select>
+    </label>
+    <label>
+      Select branch to compare
+      <select formControlName="secondary">
+        <option *ngFor="let branch of branchOptions" [value]="branch">{{ branch }}</option>
+      </select>
+    </label>
+    <label>
+      Horizon (days)
+      <input type="number" min="7" max="30" formControlName="horizon" />
+    </label>
+  </form>
+
+  <article class="compare-card">
+    <div class="card-header">
+      <div>
+        <p class="eyebrow">Forecast</p>
+        <h2>Projected balances</h2>
+      </div>
+      <span *ngIf="isLoading()" class="loading">Loading…</span>
+    </div>
+
+    <ng-container *ngIf="chartData() as chart; else noData">
+      <div class="compare-chart">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path [attr.d]="chart.primaryPath" [attr.stroke]="palette.primary" fill="none" stroke-width="2.5"></path>
+          <path [attr.d]="chart.secondaryPath" [attr.stroke]="palette.secondary" fill="none" stroke-width="2.5"></path>
+        </svg>
+      </div>
+      <div class="legend">
+        <div>
+          <span class="legend-dot" [style.background]="palette.primary"></span>
+          <div>
+            <p>{{ selected().primary }}</p>
+            <p class="legend-meta">Final balance: {{ chart.primary.points.at(-1)?.projectedBalance || 0 | currency:'ZAR':'symbol-narrow':'1.0-0' }}</p>
+          </div>
+        </div>
+        <div>
+          <span class="legend-dot" [style.background]="palette.secondary"></span>
+          <div>
+            <p>{{ selected().secondary }}</p>
+            <p class="legend-meta">Final balance: {{ chart.secondary.points.at(-1)?.projectedBalance || 0 | currency:'ZAR':'symbol-narrow':'1.0-0' }}</p>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </article>
+
+  <article class="compare-card">
+    <div class="card-header">
+      <div>
+        <p class="eyebrow">Current balance mix</p>
+        <h2>Branch share</h2>
+      </div>
+    </div>
+    <ng-container *ngIf="pieData() as pie; else noData">
+      <div class="balance-grid">
+        <div class="pie" [style.background]="pie.background"></div>
+        <div class="slices">
+          <div class="slice" *ngFor="let slice of pie.slices; trackBy: trackByIndex">
+            <span class="legend-dot" [style.background]="slice.color"></span>
+            <div>
+              <p>{{ slice.label }}</p>
+              <p class="legend-meta">{{ slice.value | currency:'ZAR':'symbol-narrow':'1.0-0' }} • {{ slice.percentage | number:'1.0-1' }}%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </article>
+</section>
+
+<ng-template #noData>
+  <p class="empty-state">Select two branches to compare projections.</p>
+</ng-template>

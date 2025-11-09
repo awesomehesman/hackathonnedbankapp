@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+input,
+select {
+  border: 1px solid rgba(3, 51, 44, 0.12);
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: #0fb389;
+    box-shadow: 0 0 0 3px rgba(15, 179, 137, 0.2);
+  }
+}

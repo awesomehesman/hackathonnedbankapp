@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: #f5f8f7;
+  color: #0f172a;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f5f8f7;
+}
+
+.brand-card {
+  @apply bg-white rounded-[28px] shadow-[0_40px_120px_rgba(15,93,84,0.18)];
+}
+
+.brand-button {
+  @apply inline-flex items-center justify-center rounded-full px-8 py-3 font-semibold transition-colors;
+}
+
+.brand-button--primary {
+  background: linear-gradient(90deg, #0fb389 0%, #0c7c68 100%);
+  color: white;
+}
+
+.brand-button--outline {
+  border: 1px solid #0c7c68;
+  color: #0c7c68;
+}
+
+.brand-button--hero {
+  border: none;
+  color: #0c7c68;
+  background: linear-gradient(135deg, #ffffff, #dff7f0);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+}
+
+.brand-button--hero:hover {
+  background: linear-gradient(135deg, #ffffff, #c8f1e5);
+}
+
+.hero-nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3rem;
+  background: linear-gradient(90deg, #0c7c68 0%, #086753 100%);
+  color: white;
+}
+
+.hero-nav__logo {
+  height: 10rem;
+  width: auto;
+  transform: scale(1.8);
+  transform-origin: left center;
+}
+
+.header-branch {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: right;
+}
+
+.branch-select__label {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+}
+
+.branch-select__control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: white;
+  color: #03332c;
+  border: 2px solid rgba(12, 124, 104, 0.5);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.branch-select__select {
+  border: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+  padding: 0.6rem 2.5rem 0.6rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: inherit;
+  min-width: 10rem;
+  cursor: pointer;
+}
+
+.branch-select__select::-ms-expand {
+  display: none;
+}
+
+.branch-select__select:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px #0fb389;
+  border-radius: 999px;
+}
+
+.branch-select__icon {
+  position: absolute;
+  right: 1rem;
+  pointer-events: none;
+  font-size: 0.9rem;
+  color: #0c7c68;
+}

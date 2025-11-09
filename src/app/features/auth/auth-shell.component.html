@@ -1,0 +1,80 @@
+<div class="min-h-screen flex items-center justify-center px-4 py-12 bg-[#eff4f3]">
+  <div class="brand-card grid lg:grid-cols-2 w-full max-w-5xl overflow-hidden">
+    <section class="p-10 flex flex-col justify-between bg-white">
+      <div class="space-y-8">
+        <!-- <img src="/assets/credlink-logo.png" alt="CredLink" class="h-8" /> -->
+        <div *ngIf="mode() === 'login'; else welcomeBlock">
+          <p class="text-sm font-semibold text-[#0c7c68]">Sign in to CredLink</p>
+          <br>
+          <h1 class="text-4xl font-semibold text-[#03332C] leading-tight">All your cash intelligence, always-on.</h1>
+          <br>
+          <p class="text-slate-500">Enter your username and password to continue to CredLink Pulse.</p>
+        </div>
+        <ng-template #welcomeBlock>
+          <p class="text-sm font-semibold text-[#0c7c68]">Create Account</p>
+          <h1 class="text-4xl font-semibold text-[#03332C] leading-tight">Hello, Friend!</h1>
+          <p class="text-slate-500">Share your details to unlock forecasts, insights and Nedbank offers.</p>
+        </ng-template>
+        <!-- <div class="text-sm text-slate-500">
+          Demo credentials:
+          <span class="font-semibold text-[#03332C]">demo / Password123!</span>
+        </div> -->
+      </div>
+      <div class="flex gap-3 mt-8">
+        <!-- <button class="brand-button brand-button--primary" type="button" (click)="toggleMode('login')">Sign in</button> -->
+        <button class="brand-button brand-button--outline" type="button" (click)="toggleMode('register')">Sign up</button>
+      </div>
+    </section>
+
+    <section class="p-10 bg-gradient-to-b from-[#0fb389] to-[#0c7c68] text-white">
+      <div class="bg-white/10 rounded-3xl p-8 backdrop-blur">
+        <form
+          class="space-y-5"
+          *ngIf="mode() === 'login'; else registerFormTpl"
+          [formGroup]="loginForm"
+          (ngSubmit)="submitLogin()"
+        >
+          <h2 class="text-2xl font-semibold">Welcome back!</h2>
+          <label class="flex flex-col gap-2 text-sm">
+            Username*
+            <input
+              type="text"
+              formControlName="username"
+              class="rounded-2xl border-0 px-4 py-3 text-[#03332C]"
+              placeholder="e.g. demo"
+            />
+          </label>
+          <label class="flex flex-col gap-2 text-sm">
+            Password*
+            <input
+              type="password"
+              formControlName="password"
+              class="rounded-2xl border-0 px-4 py-3 text-[#03332C]"
+              placeholder="Password"
+            />
+          </label>
+          <button class="brand-button brand-button--primary w-full" type="submit" [disabled]="loginForm.invalid || isSubmitting()">
+            Sign in
+          </button>
+        </form>
+
+        <ng-template #registerFormTpl>
+          <form class="space-y-4 text-sm" [formGroup]="registerForm" (ngSubmit)="submitRegister()">
+            <h2 class="text-2xl font-semibold text-white">Create your profile</h2>
+            <label class="flex flex-col gap-2">
+              Username*
+              <input type="text" formControlName="username" class="rounded-2xl border-0 px-4 py-3 text-[#03332C]" placeholder="nedbank-user" />
+            </label>
+            <label class="flex flex-col gap-2">
+              Password*
+              <input type="password" formControlName="password" class="rounded-2xl border-0 px-4 py-3 text-[#03332C]" />
+            </label>
+            <button class="brand-button brand-button--primary w-full" type="submit" [disabled]="registerForm.invalid || isSubmitting()">
+              Sign up
+            </button>
+          </form>
+        </ng-template>
+      </div>
+    </section>
+  </div>
+</div>
