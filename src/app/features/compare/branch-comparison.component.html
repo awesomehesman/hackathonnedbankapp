@@ -45,57 +45,89 @@
     </label>
   </form>
 
-  <article class="compare-card">
-    <div class="card-header">
-      <div>
-        <p class="eyebrow">Forecast</p>
-        <h2>Projected balances</h2>
-      </div>
-      <span *ngIf="isLoading()" class="loading">Loading…</span>
-    </div>
-
-    <ng-container *ngIf="chartData() as chart; else noData">
-      <div class="compare-chart">
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-          <path [attr.d]="chart.primaryPath" [attr.stroke]="palette.primary" fill="none" stroke-width="2.5"></path>
-          <path [attr.d]="chart.secondaryPath" [attr.stroke]="palette.secondary" fill="none" stroke-width="2.5"></path>
-        </svg>
-      </div>
-      <div class="legend">
+  <div class="compare-grid">
+    <article class="compare-card">
+      <div class="card-header">
         <div>
-          <span class="legend-dot" [style.background]="palette.primary"></span>
-          <div>
-            <p>{{ selected().primary }}</p>
-            <p class="legend-meta">Final balance: {{ chart.primary.points.at(-1)?.projectedBalance || 0 | currency:'ZAR':'symbol-narrow':'1.0-0' }}</p>
-          </div>
+          <p class="eyebrow">Forecast</p>
+          <h2>Projected balances</h2>
         </div>
-        <div>
-          <span class="legend-dot" [style.background]="palette.secondary"></span>
-          <div>
-            <p>{{ selected().secondary }}</p>
-            <p class="legend-meta">Final balance: {{ chart.secondary.points.at(-1)?.projectedBalance || 0 | currency:'ZAR':'symbol-narrow':'1.0-0' }}</p>
-          </div>
-        </div>
+        <span *ngIf="isLoading()" class="loading">Loading…</span>
       </div>
-    </ng-container>
-  </article>
 
-  <article class="compare-card">
-    <div class="card-header">
-      <div>
-        <p class="eyebrow">Current balance mix</p>
-        <h2>Branch share</h2>
-      </div>
-    </div>
-    <ng-container *ngIf="pieData() as pie; else noData">
-      <div class="balance-grid">
-        <div class="pie" [style.background]="pie.background"></div>
-        <div class="slices">
-          <div class="slice" *ngFor="let slice of pie.slices; trackBy: trackByIndex">
-            <span class="legend-dot" [style.background]="slice.color"></span>
+      <ng-container *ngIf="chartData() as chart; else noData">
+        <div class="compare-chart">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path [attr.d]="chart.primaryPath" [attr.stroke]="palette.primary" fill="none" stroke-width="2.5"></path>
+            <path [attr.d]="chart.secondaryPath" [attr.stroke]="palette.secondary" fill="none" stroke-width="2.5"></path>
+          </svg>
+        </div>
+        <div class="legend">
+          <div>
+            <span class="legend-dot" [style.background]="palette.primary"></span>
             <div>
-              <p>{{ slice.label }}</p>
-              <p class="legend-meta">{{ slice.value | currency:'ZAR':'symbol-narrow':'1.0-0' }} • {{ slice.percentage | number:'1.0-1' }}%</p>
+              <p>{{ selected().primary }}</p>
+              <p class="legend-meta">Final balance: {{ chart.primary.points.at(-1)?.projectedBalance || 0 | currency:'ZAR':'symbol-narrow':'1.0-0' }}</p>
+            </div>
+          </div>
+          <div>
+            <span class="legend-dot" [style.background]="palette.secondary"></span>
+            <div>
+              <p>{{ selected().secondary }}</p>
+              <p class="legend-meta">Final balance: {{ chart.secondary.points.at(-1)?.projectedBalance || 0 | currency:'ZAR':'symbol-narrow':'1.0-0' }}</p>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </article>
+
+    <article class="compare-card">
+      <div class="card-header">
+        <div>
+          <p class="eyebrow">Current balance mix</p>
+          <h2>Branch share</h2>
+        </div>
+      </div>
+      <ng-container *ngIf="pieData() as pie; else noData">
+        <div class="balance-grid">
+          <div class="pie" [style.background]="pie.background"></div>
+          <div class="slices">
+            <div class="slice" *ngFor="let slice of pie.slices; trackBy: trackByIndex">
+              <span class="legend-dot" [style.background]="slice.color"></span>
+              <div>
+                <p>{{ slice.label }}</p>
+                <p class="legend-meta">{{ slice.value | currency:'ZAR':'symbol-narrow':'1.0-0' }} • {{ slice.percentage | number:'1.0-1' }}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </article>
+  </div>
+
+  <article class="compare-card">
+    <div class="card-header">
+      <div>
+        <p class="eyebrow">AI insights</p>
+        <h2>Branch improvement playbook</h2>
+      </div>
+    </div>
+    <ng-container *ngIf="comparisonInsights().length; else noData">
+      <div class="insight-grid">
+        <div class="insight-card" *ngFor="let insight of comparisonInsights(); trackBy: trackByIndex">
+          <div class="insight-card__header">
+            <p>{{ insight.title }}</p>
+            <span class="insight-badge" [class.insight-badge--action]="insight.badge === 'Action'">{{ insight.badge }}</span>
+          </div>
+          <p class="insight-summary">{{ insight.summary }}</p>
+          <p class="insight-recommendation">Focus on {{ insight.focusBranch }}: {{ insight.recommendation }}</p>
+          <div class="insight-metrics">
+            <div *ngFor="let metric of insight.metrics" class="metric-pair">
+              <p class="metric-label">{{ metric.label }}</p>
+              <div class="metric-values">
+                <span>{{ selected().primary }} · {{ metric.primary }}</span>
+                <span>{{ selected().secondary }} · {{ metric.secondary }}</span>
+              </div>
             </div>
           </div>
         </div>

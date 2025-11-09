@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { combineLatest, of } from 'rxjs';
-import { catchError, debounceTime, startWith, switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, startWith, switchMap, tap } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { CashflowApiService } from '../../core/services/cashflow-api.service';
 import { BranchService } from '../../core/services/branch.service';
@@ -47,7 +47,9 @@ export class DashboardComponent {
   readonly insights = signal<InsightCard[]>([]);
   readonly actions = signal<NextBestAction[]>([]);
   readonly alerts = signal<Warning[]>([]);
+  private readonly driverOverride = signal<DriverBreakdown[] | null>(null);
   readonly simulation = signal<SimulationState>(defaultSimulationState);
+  private mockScenarioPointer = 0;
 
   readonly forecast = computed<ForecastPoint[]>(() => {
     const response = this.forecastResponse();
@@ -64,7 +66,7 @@ export class DashboardComponent {
     this.buildMetrics(this.transactions(), this.forecastResponse(), this.summary())
   );
 
-  readonly drivers = computed<DriverBreakdown[]>(() => this.buildDrivers(this.transactions()));
+  readonly drivers = computed<DriverBreakdown[]>(() => this.driverOverride() ?? this.buildDrivers(this.transactions()));
 
   readonly simulationForm = this.fb.nonNullable.group({
     inflowDelta: [6],
@@ -180,6 +182,7 @@ export class DashboardComponent {
   private loadInsights(): void {
     this.accountCode$
       .pipe(
+        tap(() => this.applyNextAiScenario()),
         switchMap(code =>
           this.api.getInsights(code).pipe(catchError(() => of(null)))
         ),
@@ -187,20 +190,9 @@ export class DashboardComponent {
       )
       .subscribe(result => {
         if (!result) {
-          this.insights.set([]);
           this.actions.set([]);
-          this.alerts.set([]);
           return;
         }
-
-        this.insights.set(
-          result.cards.map(card => ({
-            title: card.title,
-            detail: card.summary,
-            impact: this.mapImpact(card.impact),
-            confidence: this.mapConfidence(card.confidence)
-          }))
-        );
 
         this.actions.set(
           result.nextBestActions.map(action => ({
@@ -208,14 +200,6 @@ export class DashboardComponent {
             description: action.description,
             priority: this.mapPriority(action.priority),
             owner: action.suggestedBy
-          }))
-        );
-
-        this.alerts.set(
-          result.warnings.map(warning => ({
-            severity: this.mapSeverity(warning.severity),
-            message: warning.message,
-            date: warning.expectedDate ?? undefined
           }))
         );
       });
@@ -367,6 +351,14 @@ export class DashboardComponent {
     if (normalized.includes('medium') || normalized.includes('warn')) return 'warning';
     return 'info';
   }
+
+  private applyNextAiScenario(): void {
+    const scenario = AI_INSIGHT_SCENARIOS[this.mockScenarioPointer];
+    this.mockScenarioPointer = (this.mockScenarioPointer + 1) % AI_INSIGHT_SCENARIOS.length;
+    this.insights.set(scenario.insights);
+    this.alerts.set(scenario.alerts);
+    this.driverOverride.set(scenario.drivers);
+  }
 }
 
 type SimulationState = {
@@ -384,3 +376,74 @@ const defaultSimulationState: SimulationState = {
   outflow: 0,
   narrative: ''
 };
+
+type AiInsightScenario = {
+  insights: InsightCard[];
+  alerts: Warning[];
+  drivers: DriverBreakdown[];
+};
+
+const AI_INSIGHT_SCENARIOS: AiInsightScenario[] = [
+  {
+    insights: [
+      {
+        title: 'Card deposits trend higher',
+        detail: 'Point-of-sale inflows are set to rise 8% next week as malls reopen after maintenance.',
+        impact: 'Positive',
+        confidence: 'High'
+      },
+      {
+        title: 'Payroll buffer intact',
+        detail: 'Average cash on hand will cover 1.6x the upcoming payroll run without extra funding.',
+        impact: 'Neutral',
+        confidence: 'Medium'
+      }
+    ],
+    alerts: [
+      {
+        severity: 'warning',
+        message: 'Collections dip expected on 5 April - nudge SME clients to pre-fund debits.',
+        date: new Date().toISOString()
+      },
+      {
+        severity: 'info',
+        message: 'FX exposure low - only 6% of flows linked to USD denominated suppliers.'
+      }
+    ],
+    drivers: [
+      { label: 'Merchant acquiring', weight: 65 },
+      { label: 'Working capital top-ups', weight: 35 }
+    ]
+  },
+  {
+    insights: [
+      {
+        title: 'Outflows bunch mid-horizon',
+        detail: 'Two large CapEx invoices land within three days; staggering payments saves R1.2m interest.',
+        impact: 'Risk',
+        confidence: 'High'
+      },
+      {
+        title: 'Receivables stabilising',
+        detail: 'Wholesale clients have settled 72% of outstanding invoices vs. 55% last cycle.',
+        impact: 'Positive',
+        confidence: 'Low'
+      }
+    ],
+    alerts: [
+      {
+        severity: 'critical',
+        message: 'DBN logistics branch forecast to dip below covenant buffer on 9 April.',
+        date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        severity: 'warning',
+        message: 'High variance in e-commerce refunds - review fraud filters before long weekend.'
+      }
+    ],
+    drivers: [
+      { label: 'Sales promotions', weight: 55 },
+      { label: 'Seasonality drag', weight: 45 }
+    ]
+  }
+];
